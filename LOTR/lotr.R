@@ -75,7 +75,12 @@ scrape_char_line$char_first_name_cleanup[which(scrape_char_line$char_first_name_
 
 # Join Datasets #
 lotr_join <- left_join(scrape_char_line, lotr_char_race, by = c("char_first_name_cleanup" = "name_capitalized_nopunct"))
+# okay, now it's looking like a more accurate match.
 
+# Drop non-matches:
+lotr_join <- lotr_join[!is.na(lotr_join$race),c("char_first_name_cleanup","race")]
+colnames(lotr_join) <- c("lotr_character_line_in_order","lotr_race")
 
-
+# Write output;
+write_csv(lotr_join, "Output/lotr_fotr_character_line_order.csv")
 
