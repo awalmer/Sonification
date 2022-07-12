@@ -58,15 +58,23 @@ lotr_char_race <- lotr_char_race[!duplicated(lotr_char_race), ] # 827 to 737 row
 # lotr_char_race does not contain GOLLUM!
 lotr_char_race[738,] <- list("Gollum","Hobbit","GOLLUM","GOLLUM")
 lotr_char_race[739,] <- list("Strider","Man","STRIDER","STRIDER")
+lotr_char_race[740,] <- list("Mrs. Sackville Baggins","Hobbit","MRS. SACKVILLE BAGGINS","MRS. SACKVILLE BAGGINS")
+
 unique(scrape_char_line$char_first_name)
 
 ## note! weird characters! "\r" -->
 scrape_char_line$char_first_name[23]
-#scrape_char_line$char_first_name_cleanup <- gsub( "\r", "", scrape_char_line$char_first_name)
+# CREATING A PROBLEM WITH THE JOIN!
+scrape_char_line$char_first_name_cleanup <- gsub( '/(\r\n)+|\r+|\n+/i', '', scrape_char_line$char_first_name)
+# Removed carriage return
+# (thank you https://kaspars.net/blog/regex-remove-all-line-breaks-from-text)
 #scrape_char_line$char_first_name_cleanup <- gsub( ".", "", scrape_char_line$char_first_name_cleanup)
+unique(scrape_char_line$char_first_name_cleanup)
+# Add Mrs. Sackville Baggins (one line!)
+scrape_char_line$char_first_name_cleanup[which(scrape_char_line$char_first_name_cleanup=="MRS.")] <- "MRS. SACKVILLE BAGGINS"
 
 # Join Datasets #
-lotr_join <- left_join(scrape_char_line, lotr_char_race, by = c("char_first_name" = "name_capitalized"))
+lotr_join <- left_join(scrape_char_line, lotr_char_race, by = c("char_first_name_cleanup" = "name_capitalized_nopunct"))
 
 
 
