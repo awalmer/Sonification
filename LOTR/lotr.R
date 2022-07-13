@@ -81,6 +81,16 @@ lotr_join <- left_join(scrape_char_line, lotr_char_race, by = c("char_first_name
 lotr_join <- lotr_join[!is.na(lotr_join$race),c("char_first_name_cleanup","race")]
 colnames(lotr_join) <- c("lotr_character_line_in_order","lotr_race")
 
-# Write output;
+# Write output:
 write_csv(lotr_join, "Output/lotr_fotr_character_line_order.csv")
+
+# New data set for sonification:
+# Number by race
+lotr_line_order_race <- data.frame(race = lotr_join$lotr_race, order = 1:nrow(lotr_join))
+# Write output:
+write_csv(lotr_line_order_race, "Output/lotr_line_order_race.csv")
+write_csv(data.frame(lotr_line_order_race$race), "Output/lotr_line_order_race_onlyrace.csv")
+
+## Looks like with Two Tone, you have to numericize the data of interest?
+lotr_line_order_race_numericized 
 
