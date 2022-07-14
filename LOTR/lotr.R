@@ -92,5 +92,6 @@ write_csv(lotr_line_order_race, "Output/lotr_line_order_race.csv")
 write_csv(data.frame(lotr_line_order_race$race), "Output/lotr_line_order_race_onlyrace.csv")
 
 ## Looks like with Two Tone, you have to numericize the data of interest?
-lotr_line_order_race_numericized 
-
+lotr_line_order_race_numericized <- data.frame(line_order = 1:nrow(lotr_join), race = lotr_join$lotr_race, race_factorized = as.factor(lotr_join$lotr_race)) 
+levels(lotr_line_order_race_numericized$race_factorized) <- list("Ainur"=2,"Elf"=4,"Man"=6,"Dwarf"=8,"Hobbit"=10)
+lotr_line_order_race_numericized$race_numericized <- as.numeric(lotr_line_order_race_numericized$race_factorized)*2
