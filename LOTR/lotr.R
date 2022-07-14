@@ -92,6 +92,33 @@ write_csv(lotr_line_order_race, "Output/lotr_line_order_race.csv")
 write_csv(data.frame(lotr_line_order_race$race), "Output/lotr_line_order_race_onlyrace.csv")
 
 ## Looks like with Two Tone, you have to numericize the data of interest?
-lotr_line_order_race_numericized <- data.frame(line_order = 1:nrow(lotr_join), race = lotr_join$lotr_race, race_factorized = as.factor(lotr_join$lotr_race)) 
+lotr_line_order_race_numericized <- data.frame(line_order = 1:nrow(lotr_join), 
+                                               race = lotr_join$lotr_race, race_factorized = as.factor(lotr_join$lotr_race),
+                                               character = lotr_join$lotr_character_line_in_order) 
 levels(lotr_line_order_race_numericized$race_factorized) <- list("Ainur"=2,"Elf"=4,"Man"=6,"Dwarf"=8,"Hobbit"=10)
 lotr_line_order_race_numericized$race_numericized <- as.numeric(lotr_line_order_race_numericized$race_factorized)*2
+lotr_line_order_race_numericized <- lotr_line_order_race_numericized[c(1:2,4,5)]
+
+# add character ID too
+lotr_line_order_race_numericized$character_id <- as.numeric(factor(lotr_join$lotr_character_line_in_order))
+
+write_csv(lotr_line_order_race_numericized, "Output/lotr_line_order_race_numericized.csv")
+
+
+## How about a data frame of number of lines per character?
+lotr_lines_per_character <- data.frame(character = unique(lotr_join$lotr_character_line_in_order), number_of_lines=0)
+for (n in 1:nrow(lotr_lines_per_character)) {
+  lotr_lines_per_character$number_of_lines[n] <- length(
+    which(
+      lotr_join$lotr_character_line_in_order==lotr_lines_per_character$character[n]
+      )
+    )
+}
+  
+lotr_lines_per_character <- left_join(lotr_lines_per_character, distinct(lotr_join), by = c("character"="lotr_character_line_in_order"))
+
+write_csv(lotr_lines_per_character, "Output/lotr_lines_per_character.csv")
+
+
+
+
