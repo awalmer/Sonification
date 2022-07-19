@@ -10,6 +10,7 @@
 library(tidyverse)
 library(rvest)
 library(stringi)
+library(data.table)
 
 setwd("/Volumes/AuraByte/Data Projects/LOTR/")
 
@@ -112,3 +113,9 @@ write_csv(lotr_script_summary, "Output/lotr_lines_per_character.csv")
 
 
 
+## Goal: tranfer data into Logic Pro X and implement Philharmonia sound samples
+test <- 
+  transform(lotr_join, counter = ave(name_clean, rleid(name_clean), FUN = seq_along))
+test$group_id <- rleid(test$name_clean)
+test2 <-
+  test%>%group_by(group_id)%>%slice(which.max(counter))
