@@ -1,0 +1,21 @@
+character,race,character_id,number_of_lines
+GALADRIEL,Elf,1,54
+GOLLUM,Hobbit,2,5
+BILBO,Hobbit,3,58
+FRODO,Hobbit,4,130
+GANDALF,Ainur,5,164
+MRS. SACKVILLE BAGGINS,Hobbit,6,1
+SAM,Hobbit,7,60
+MERRY,Hobbit,8,41
+PIPPIN,Hobbit,9,31
+SARUMAN,Ainur,10,32
+ARAGORN,Man,11,75
+ARWEN,Elf,12,24
+ELROND,Elf,13,25
+ISILDUR,Man,14,1
+BOROMIR,Man,15,52
+LEGOLAS,Elf,16,18
+GIMLI,Dwarf,17,25
+HALDIR,Elf,18,6
+CELEBORN,Elf,19,1
+SAURON,Ainur,20,1
