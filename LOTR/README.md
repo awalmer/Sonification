@@ -4,9 +4,6 @@
 
 Visit [my website](https://aurawalmer.com/data-sonification-lotr "Aura Walmer") for visualizations and embedded audio. 
 
-Data Sonification: What is it? Simply put, it is the representation of data through sound.
-I’m interested in representing data in creative and intriguing ways — data sonification strikes me as a unique way to convey information in a playful way.
-
 With the aim to create a simple sonification project, I began exploring datasets on Kaggle, and came across a pair of LOTR datasets involving the movie scripts and character classification. I thought it would be interesting to sonify the ethnic group or character distribution across the script — which characters and tribe groups speak the most in the films?
 Pulling this data into R, I found that the data was a bit problematic — for example, some characters were missing, and the script lines were out of order, which would not work for my purposes. I decided to procure the data in a different way — using the R rvest package, I scraped the LOTR Fellowship of the Ring script from an IMSDb webpage. Pulling the character name from the beginning of each <b></b> section of the html script, I merged this data with a comprehensive character list. 
 With some manipulation and cleaning, I ended up with a dataset of character name and ethnic group classification (“Ainur,” “Elf,” etc.) in the order of spoken lines in the screenplay.
