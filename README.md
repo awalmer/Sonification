@@ -9,4 +9,5 @@ Data Sonification Examples:
 + Jordan Wirfs-Brock, [“Crescendo of Unemployment”](https://www.marketplace.org/2020/06/24/heres-what-the-crescendo-of-unemployment-sounds-like/amp/)  
 + Mark Ballora, [“Sound of a Neutron Star”](https://www.science.org/content/article/meet-scientist-who-turns-data-music-and-listen-sound-neutron-star)  
   
-  Great [article](https://datajournalism.com/read/longreads/data-sonification) from DataJournalism.com about data sonification! 🤓
+
+Great [article](https://datajournalism.com/read/longreads/data-sonification) from DataJournalism.com about data sonification! 🤓
