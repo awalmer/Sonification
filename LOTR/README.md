@@ -2,6 +2,8 @@
 ### Who Talks the Most in the Film “The Lord of the Rings: The Fellowship of the Ring?”
 ### *A Sonic Montage of Spoken Line Instances by Character*
 
+Visit [my website](https://aurawalmer.com/data-sonification-lotr "Aura Walmer") for visualizations and embedded audio. 
+
 Data Sonification: What is it? Simply put, it is the representation of data through sound.
 I’m interested in representing data in creative and intriguing ways — data sonification strikes me as a unique way to convey information in a playful way.
 
