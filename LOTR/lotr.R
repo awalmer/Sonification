@@ -75,6 +75,7 @@ lotr_char_race[nrow(lotr_char_race)+1,] <- list("Strider","Man","STRIDER")
 lotr_char_race[nrow(lotr_char_race)+1,] <- list("Mrs. Sackville Baggins","Hobbit","MRS. SACKVILLE BAGGINS")
 lotr_char_race[nrow(lotr_char_race)+1,] <- list("Sam","Hobbit","SAM") # Samwise but Sam in script
 
+
 ## JOIN DATA ##
 lotr_join <- left_join(scrape_characters[c("character_lines_in_order","name_clean")], 
                        lotr_char_race[c("race","name_clean")],
@@ -137,8 +138,110 @@ write_csv(lotr_script_summary2, "Data Output/lotr_lines_per_race.csv")
 lotr_logicprox <- transform(lotr_join, counter = ave(name_clean, rleid(name_clean), FUN = seq_along))
 lotr_logicprox$group_id <- rleid(lotr_logicprox$name_clean)
 lotr_logicprox <- lotr_logicprox%>%group_by(group_id)%>%slice(which.max(counter))
+lotr_logicprox$counter <- as.numeric(lotr_logicprox$counter)
+lotr_logicprox$musical_measure <- lotr_logicprox$counter/4
+lotr_logicprox$line_start <- 0 # Measure placemarkers for MIDI regions in Logic Pro X
+lotr_logicprox$line_end <- 0
+lotr_logicprox[1,"line_start"] <- 6
+lotr_logicprox[1,"line_end"] <- 6+lotr_logicprox[1,"musical_measure"]
+for (m in 2:nrow(lotr_logicprox)) {
+  lotr_logicprox$line_start[m] <- lotr_logicprox$line_end[m-1]
+  lotr_logicprox$line_end[m] <- lotr_logicprox$line_start[m]+lotr_logicprox$musical_measure[m]
+}
 
 # Write output:
 write_csv(lotr_logicprox, "Data Output/lotr_logicprox.csv")
 
+
+## DATA VISUALIZATIONS ##
+library(plotly)
+library(ggplot2)
+library(treemapify)
+
+lotr_colors <- c(Hobbit="#c29a11",Elf="#1c724d",Ainur="#5b31a1",Man="#25719c",Dwarf="#995f19")
+race_order <- c("Hobbit","Ainur","Elf","Man","Dwarf")
+
+legend_aes <- list(
+  font = list(
+    family = "sans-serif",
+    size = 12,
+    color = "#000"),
+  bgcolor = "#E2E2E2",
+  bordercolor = "#FFFFFF",
+  borderwidth = 2)
+
+barchart_ethnicgroup <- lotr_script_summary2 %>% 
+  plot_ly(x = ~race, y = ~number_of_lines, 
+          type="bar", color = ~race, colors=lotr_colors, text=~number_of_lines,textposition = 'auto') %>%
+  layout(paper_bgcolor='#494949',
+         plot_bgcolor='#292929',
+         xaxis = list(title = "Group",
+                      categoryorder = "array",
+                      categoryarray = ~race_order,
+                      color = '#ffffff'),
+         yaxis = list(title = "Lines in Script",
+           color = '#ffffff'),
+         title="title",
+         legend = legend_aes
+         ) %>% 
+  add_text(x = ~race, y = ~number_of_lines,text=~number_of_lines,textposition="top")
+barchart_ethnicgroup
+
+
+apple_pie <- lotr_script_summary2 %>%
+              plot_ly(type='pie', labels=lotr_script_summary2$race, values=lotr_script_summary2$number_of_lines, 
+                     textinfo='label+percent',
+                     marker = list(colors = lotr_colors)
+                     )
+apple_pie
+
+hobbits <- lotr_script_summary1[which(lotr_script_summary1$race=="Hobbit"),]
+ainur <- lotr_script_summary1[which(lotr_script_summary1$race=="Ainur"),]
+elves <- lotr_script_summary1[which(lotr_script_summary1$race=="Elf"),]
+men <- lotr_script_summary1[which(lotr_script_summary1$race=="Man"),]
+dwarves <- lotr_script_summary1[which(lotr_script_summary1$race=="Dwarf"),]
+
+hobbit_pie <- hobbits %>%
+  plot_ly(type='pie', labels=hobbits$character, 
+          values=hobbits$number_of_lines, 
+          textinfo='label+percent+value',
+          marker = list(colors = lotr_colors)
+  )
+hobbit_pie
+ainur_pie <- ainur %>%
+  plot_ly(type='pie', labels=ainur$character, 
+          values=ainur$number_of_lines, 
+          textinfo='label+percent+value',
+          marker = list(colors = lotr_colors)
+  )
+ainur_pie
+elf_pie <- elves %>%
+  plot_ly(type='pie', labels=elves$character, 
+          values=elves$number_of_lines, 
+          textinfo='label+percent+value',
+          marker = list(colors = lotr_colors)
+  )
+elf_pie
+men_pie <- men %>%
+  plot_ly(type='pie', labels=men$character, 
+          values=men$number_of_lines, 
+          textinfo='label+percent+value',
+          marker = list(colors = lotr_colors)
+  )
+men_pie
+dwarf_pie <- dwarves %>%
+  plot_ly(type='pie', labels=dwarves$character, 
+          values=dwarves$number_of_lines, 
+          textinfo='label+percent+value',
+          marker = list(colors = lotr_colors)
+  )
+dwarf_pie
+
+ggplot(lotr_script_summary1, aes(area = number_of_lines, fill = race, label = character)) +
+  geom_treemap() +
+  geom_treemap_text()
+
+ggplot(lotr_script_summary1, aes(x = race, y = number_of_lines, fill = character)) + 
+  geom_bar(stat = "identity") +
+  scale_x_discrete(limits = race_order)
 
