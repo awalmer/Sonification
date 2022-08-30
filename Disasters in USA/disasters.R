@@ -9,6 +9,9 @@
 # Set up #
 library(httr)
 library(jsonlite)
+library(dplyr)
+library(tidyr)   
+library(openxlsx)
 
 setwd("/Volumes/AuraByte/Data Projects/Disasters in USA/")
 
@@ -23,7 +26,32 @@ res = GET("https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries?$top=1
 content = fromJSON(rawToChar(res$content))
 data = fromJSON(rawToChar(res$content))$DisasterDeclarationsSummaries
 # 63,215 records
-# Note: this is not the total numner of disasters. There are potentially multiple rows for a given disaster affecting more than one county.
+# Note: this is not the total number of disasters. There are potentially multiple rows for a given disaster affecting more than one county.
+
+# Summary Tables
+freq_by_year <- 
+data %>%
+  group_by(fyDeclared) %>%
+  summarise(distinct_incidents = n_distinct(disasterNumber),
+            types = n_distinct(incidentType))
+
+type_count_per_year <- 
+data %>%
+  group_by(fyDeclared, incidentType) %>%
+  summarise(distinct_incidents = n_distinct(disasterNumber))
+
+incident_count_wide <- # pivoted table with incident type as columns
+type_count_per_year %>%
+  pivot_wider(names_from = incidentType, values_from = distinct_incidents)
+incident_count_wide$Total <- rowSums(incident_count_wide[,c(2:ncol(incident_count_wide))], na.rm=TRUE)
+incident_count_wide <- incident_count_wide[,c(1,25,2:24)]
+
+# Export
+# write.xlsx(data, 'fema_disaster_data.xlsx', sheetName = 'All Data', row.names=FALSE)
+openxlsx::write.xlsx(freq_by_year, 'datasets/disaster_count_per_year.xlsx', sheetName = 'Disaster Count Per Year', rowNames=FALSE)
+openxlsx::write.xlsx(incident_count_wide, 'datasets/disaster_count_by_type_wide.xlsx', sheetName = 'Number Incidents byType pYear', rowNames=FALSE)
+
+
 
 # Ideas
-# map of state colored by how many disasters 
+# map of state colored by how many disasters per state
