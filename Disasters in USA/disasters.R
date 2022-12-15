@@ -13,7 +13,7 @@ library(dplyr)
 library(tidyr)   
 library(openxlsx)
 
-setwd("/Volumes/AuraByte/Data Projects/Disasters in USA/")
+setwd("/Volumes/AuraByte2/Data Projects/Disasters in USA/")
 
 # Call FEMA API #
 res = GET("https://www.fema.gov/api/open/v2/DisasterDeclarationsSummaries")
@@ -55,3 +55,11 @@ openxlsx::write.xlsx(incident_count_wide, 'datasets/disaster_count_by_type_wide.
 
 # Ideas
 # map of state colored by how many disasters per state
+# what about just fires in california, merged with max temp over time?
+# (sonification: tone pitch by temp, and instances of fire)
+# data on temperature in usa: https://www.ncei.noaa.gov/cag/statewide/time-series/4/tmin/ann/12/1950-2022?base_prd=true&begbaseyear=1950&endbaseyear=2022
+
+# what about low pitch = fewer instances total, higher pitch = more instances?
+# amplitude of sound sample correlated with number of specific disaster instances?
+# could have loopable sound that gets increased in amplitude the more it happens, 
+# so that way it's more of a continuous growth
