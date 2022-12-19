@@ -12,6 +12,7 @@ library(jsonlite)
 library(dplyr)
 library(tidyr)   
 library(openxlsx)
+library(ggplot2)
 
 setwd("/Volumes/AuraByte2/Data Projects/Disasters in USA/")
 
@@ -50,6 +51,33 @@ incident_count_wide <- incident_count_wide[,c(1,25,2:24)]
 # write.xlsx(data, 'fema_disaster_data.xlsx', sheetName = 'All Data', row.names=FALSE)
 openxlsx::write.xlsx(freq_by_year, 'datasets/disaster_count_per_year.xlsx', sheetName = 'Disaster Count Per Year', rowNames=FALSE)
 openxlsx::write.xlsx(incident_count_wide, 'datasets/disaster_count_by_type_wide.xlsx', sheetName = 'Number Incidents byType pYear', rowNames=FALSE)
+
+
+# Exploration
+ggplot(incident_count_wide, aes(fyDeclared, Fire)) + geom_point()
+ggplot(incident_count_wide, aes(fyDeclared, Flood)) + geom_point()
+ggplot(incident_count_wide, aes(fyDeclared, Tornado)) + geom_point()
+ggplot(incident_count_wide, aes(fyDeclared, Hurricane)) + geom_point()
+
+incident_count_wide[!is.na(incident_count_wide$Fire),]
+
+# Simplified Data / Data of interest:
+icw_subset <- incident_count_wide[
+  incident_count_wide$fyDeclared>=1981 & incident_count_wide$fyDeclared<=2021,
+  c("fyDeclared","Fire","Flood","Tornado","Hurricane")
+  ]
+icw_subset$Total = 
+  rowSums(icw_subset[,c(2:ncol(icw_subset))], 
+          na.rm=TRUE)
+
+icw_subset$sonicpi_numeric = 50 + icw_subset$Total*.25 # range from 50 to 100
+# audible in sonic pi; normalize range
+write.table(matrix(icw_subset$sonicpi_numeric,nrow=1), sep=",",
+            row.names=FALSE, col.names=FALSE) # for "play_pattern_timed" in sonic pi
+# Useful Sonic Pi docs:
+# https://github.com/sonic-pi-net/sonic-pi/tree/dev/etc/doc/tutorial
+
+
 
 
 
