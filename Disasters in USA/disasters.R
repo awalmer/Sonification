@@ -69,13 +69,34 @@ icw_subset <- incident_count_wide[
 icw_subset$Total = 
   rowSums(icw_subset[,c(2:ncol(icw_subset))], 
           na.rm=TRUE)
-
-icw_subset$sonicpi_numeric = 50 + icw_subset$Total*.25 # range from 50 to 100
-# audible in sonic pi; normalize range
+# Playing with Sonic Pi tool, get numeric array:
+icw_subset$sonicpi_numeric = 50 + icw_subset$Total*.25 # range from 50 to 100 (audible in Sonic Pi)
+# converted [1,200] range to [50,100] range; audible in sonic pi; normalized range
 write.table(matrix(icw_subset$sonicpi_numeric,nrow=1), sep=",",
             row.names=FALSE, col.names=FALSE) # for "play_pattern_timed" in sonic pi
 # Useful Sonic Pi docs:
 # https://github.com/sonic-pi-net/sonic-pi/tree/dev/etc/doc/tutorial
+
+openxlsx::write.xlsx(icw_subset, 'datasets/disaster_count_by_type_wide_subset.xlsx', sheetName = 'Disaster Data Subset', rowNames=FALSE)
+
+## Problem: quarter tones in logic. (when converting to MIDI)
+# Okay, instead we can do numeric grouping here in R, then use Sonic Pi.
+# Transform to check what group Total value falls within. 1 to 4 = group 1, 5 to 8 = group 2, etc...
+icw_subset$group = transform(icw_subset, group = cut(Total, c(seq(1,200,4)), labels = FALSE))$group
+icw_subset$sonicpi_tonegroup = icw_subset$group + 50 # bumping into audible range for Sonic Pi
+# array for Sonic Pi script:
+write.table(matrix(icw_subset$sonicpi_tonegroup,nrow=1), sep=",",
+            row.names=FALSE, col.names=FALSE) # for "play_pattern_timed" in sonic pi
+
+# Would be interesting to also give listener narrated samples of average tones per decade
+# or just tonal reference for number of disasters to pitch
+
+
+# Two Tone Attempt:
+twotonedata <- icw_subset[c("fyDeclared", "Total")]
+openxlsx::write.xlsx(twotonedata, 'datasets/twotonedata.xlsx', sheetName = 'For Two Tone', rowNames=FALSE)
+# two tone gives too many repeat tone values, not precise enough! :-(
+
 
 
 
