@@ -58,12 +58,11 @@ ggplot(incident_count_wide, aes(fyDeclared, Fire)) + geom_point()
 ggplot(incident_count_wide, aes(fyDeclared, Flood)) + geom_point()
 ggplot(incident_count_wide, aes(fyDeclared, Tornado)) + geom_point()
 ggplot(incident_count_wide, aes(fyDeclared, Hurricane)) + geom_point()
-
 incident_count_wide[!is.na(incident_count_wide$Fire),]
 
 # Simplified Data / Data of interest:
 icw_subset <- incident_count_wide[
-  incident_count_wide$fyDeclared>=1981 & incident_count_wide$fyDeclared<=2021,
+  incident_count_wide$fyDeclared>=1970 & incident_count_wide$fyDeclared<=2021,
   c("fyDeclared","Fire","Flood","Tornado","Hurricane")
   ]
 icw_subset$Total = 
@@ -77,8 +76,6 @@ write.table(matrix(icw_subset$sonicpi_numeric,nrow=1), sep=",",
 # Useful Sonic Pi docs:
 # https://github.com/sonic-pi-net/sonic-pi/tree/dev/etc/doc/tutorial
 
-openxlsx::write.xlsx(icw_subset, 'datasets/disaster_count_by_type_wide_subset.xlsx', sheetName = 'Disaster Data Subset', rowNames=FALSE)
-
 ## Problem: quarter tones in logic. (when converting to MIDI)
 # Okay, instead we can do numeric grouping here in R, then use Sonic Pi.
 # Transform to check what group Total value falls within. 1 to 4 = group 1, 5 to 8 = group 2, etc...
@@ -87,6 +84,13 @@ icw_subset$sonicpi_tonegroup = icw_subset$group + 50 # bumping into audible rang
 # array for Sonic Pi script:
 write.table(matrix(icw_subset$sonicpi_tonegroup,nrow=1), sep=",",
             row.names=FALSE, col.names=FALSE) # for "play_pattern_timed" in sonic pi
+
+# Excel output:
+openxlsx::write.xlsx(icw_subset, 'datasets/disaster_count_by_type_wide_subset.xlsx', sheetName = 'Disaster Data Subset', rowNames=FALSE)
+
+
+
+## Extra / Notes
 
 # Would be interesting to also give listener narrated samples of average tones per decade
 # or just tonal reference for number of disasters to pitch
