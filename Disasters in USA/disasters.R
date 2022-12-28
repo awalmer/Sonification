@@ -31,24 +31,24 @@ data = fromJSON(rawToChar(res$content))$DisasterDeclarationsSummaries
 
 # Summary Tables
 freq_by_year <- 
-data %>%
-  group_by(fyDeclared) %>%
-  summarise(distinct_incidents = n_distinct(disasterNumber),
-            types = n_distinct(incidentType))
+  data %>%
+    group_by(fyDeclared) %>%
+    summarise(distinct_incidents = n_distinct(disasterNumber),
+              types = n_distinct(incidentType))
 
 type_count_per_year <- 
-data %>%
-  group_by(fyDeclared, incidentType) %>%
-  summarise(distinct_incidents = n_distinct(disasterNumber))
+  data %>%
+    group_by(fyDeclared, incidentType) %>%
+    summarise(distinct_incidents = n_distinct(disasterNumber))
+# most prevalent types: fire, severe storm, hurricane, flood, drought, snowstorm...
 
 incident_count_wide <- # pivoted table with incident type as columns
-type_count_per_year %>%
-  pivot_wider(names_from = incidentType, values_from = distinct_incidents)
-incident_count_wide$Total <- rowSums(incident_count_wide[,c(2:ncol(incident_count_wide))], na.rm=TRUE)
-incident_count_wide <- incident_count_wide[,c(1,25,2:24)]
+  type_count_per_year %>%
+    pivot_wider(names_from = incidentType, values_from = distinct_incidents)
+  incident_count_wide$Total <- rowSums(incident_count_wide[,c(2:ncol(incident_count_wide))], na.rm=TRUE)
+  incident_count_wide <- incident_count_wide[,c(1,25,2:24)]
 
-# Export
-# write.xlsx(data, 'fema_disaster_data.xlsx', sheetName = 'All Data', row.names=FALSE)
+# Export to Excel
 openxlsx::write.xlsx(freq_by_year, 'datasets/disaster_count_per_year.xlsx', sheetName = 'Disaster Count Per Year', rowNames=FALSE)
 openxlsx::write.xlsx(incident_count_wide, 'datasets/disaster_count_by_type_wide.xlsx', sheetName = 'Number Incidents byType pYear', rowNames=FALSE)
 
@@ -56,37 +56,57 @@ openxlsx::write.xlsx(incident_count_wide, 'datasets/disaster_count_by_type_wide.
 # Exploration
 ggplot(incident_count_wide, aes(fyDeclared, Fire)) + geom_point()
 ggplot(incident_count_wide, aes(fyDeclared, Flood)) + geom_point()
-ggplot(incident_count_wide, aes(fyDeclared, Tornado)) + geom_point()
+ggplot(incident_count_wide, aes(fyDeclared, incident_count_wide$`Severe Storm`)) + geom_point()
 ggplot(incident_count_wide, aes(fyDeclared, Hurricane)) + geom_point()
 incident_count_wide[!is.na(incident_count_wide$Fire),]
 
-# Simplified Data / Data of interest:
-icw_subset <- incident_count_wide[
+
+# Simplified Data / Data of interest (most prevalent disasters):
+data_subset <- incident_count_wide[
   incident_count_wide$fyDeclared>=1970 & incident_count_wide$fyDeclared<=2021,
-  c("fyDeclared","Fire","Flood","Tornado","Hurricane")
+  c("fyDeclared","Fire","Severe Storm","Hurricane","Flood","Drought","Snowstorm")
   ]
-icw_subset$Total = 
-  rowSums(icw_subset[,c(2:ncol(icw_subset))], 
+data_subset$Total = 
+  rowSums(data_subset[,c(2:ncol(data_subset))], 
           na.rm=TRUE)
 # Playing with Sonic Pi tool, get numeric array:
-icw_subset$sonicpi_numeric = 50 + icw_subset$Total*.25 # range from 50 to 100 (audible in Sonic Pi)
-# converted [1,200] range to [50,100] range; audible in sonic pi; normalized range
-write.table(matrix(icw_subset$sonicpi_numeric,nrow=1), sep=",",
+# Normalize Total range to 50 range:
+min_disasters <- min(data_subset$Total)
+max_disasters <- max(data_subset$Total)
+normalizing_factor <- (max_disasters-min_disasters)/50
+starting_place <- round(50-min_disasters/normalizing_factor,2)
+# 50 to 100 sonic neighborhood for sonic pi:
+data_subset$sonicpi_numeric = starting_place + round(data_subset$Total/normalizing_factor,2)
+write.table(matrix(data_subset$sonicpi_numeric,nrow=1), sep=",",
             row.names=FALSE, col.names=FALSE) # for "play_pattern_timed" in sonic pi
-# Useful Sonic Pi docs:
-# https://github.com/sonic-pi-net/sonic-pi/tree/dev/etc/doc/tutorial
+# Useful Sonic Pi docs: https://github.com/sonic-pi-net/sonic-pi/tree/dev/etc/doc/tutorial
 
-## Problem: quarter tones in logic. (when converting to MIDI)
+# Convert values so that tones will be playable by MIDI piano in Logic Pro X
+data_subset$sonicpi_semitones <- round(data_subset$sonicpi_numeric)
+# array for Sonic Pi script:
+write.table(matrix(data_subset$sonicpi_semitones,nrow=1), sep=",",
+            row.names=FALSE, col.names=FALSE) # for "play_pattern_timed" in sonic pi
+
+
+
+
+
+
+
+
+## OLD code:
+## Convert Sonic Pi numeric values into groups so that values can be translating to semitones in Logic Pro X.
+# (Problem: in-between tones in logic when converting to MIDI)
 # Okay, instead we can do numeric grouping here in R, then use Sonic Pi.
 # Transform to check what group Total value falls within. 1 to 4 = group 1, 5 to 8 = group 2, etc...
-icw_subset$group = transform(icw_subset, group = cut(Total, c(seq(1,200,4)), labels = FALSE))$group
-icw_subset$sonicpi_tonegroup = icw_subset$group + 50 # bumping into audible range for Sonic Pi
+data_subset$group = transform(data_subset, group = cut(Total, c(seq(min_disasters,max_disasters,4)), labels = FALSE))$group
+data_subset$sonicpi_tonegroup = data_subset$group + 50 # bumping into audible range for Sonic Pi
 # array for Sonic Pi script:
-write.table(matrix(icw_subset$sonicpi_tonegroup,nrow=1), sep=",",
+write.table(matrix(data_subset$sonicpi_tonegroup,nrow=1), sep=",",
             row.names=FALSE, col.names=FALSE) # for "play_pattern_timed" in sonic pi
 
 # Excel output:
-openxlsx::write.xlsx(icw_subset, 'datasets/disaster_count_by_type_wide_subset.xlsx', sheetName = 'Disaster Data Subset', rowNames=FALSE)
+openxlsx::write.xlsx(data_subset, 'datasets/disaster_count_by_type_wide_subset.xlsx', sheetName = 'Disaster Data Subset', rowNames=FALSE)
 
 
 
@@ -97,7 +117,7 @@ openxlsx::write.xlsx(icw_subset, 'datasets/disaster_count_by_type_wide_subset.xl
 
 
 # Two Tone Attempt:
-twotonedata <- icw_subset[c("fyDeclared", "Total")]
+twotonedata <- data_subset[c("fyDeclared", "Total")]
 openxlsx::write.xlsx(twotonedata, 'datasets/twotonedata.xlsx', sheetName = 'For Two Tone', rowNames=FALSE)
 # two tone gives too many repeat tone values, not precise enough! :-(
 
