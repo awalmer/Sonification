@@ -10,6 +10,7 @@
 library(httr)
 library(jsonlite)
 library(dplyr)
+library(plyr)
 library(tidyr)   
 library(openxlsx)
 library(ggplot2)
@@ -53,18 +54,10 @@ openxlsx::write.xlsx(freq_by_year, 'datasets/disaster_count_per_year.xlsx', shee
 openxlsx::write.xlsx(incident_count_wide, 'datasets/disaster_count_by_type_wide.xlsx', sheetName = 'Number Incidents byType pYear', rowNames=FALSE)
 
 
-# Exploration
-ggplot(incident_count_wide, aes(fyDeclared, Fire)) + geom_point()
-ggplot(incident_count_wide, aes(fyDeclared, Flood)) + geom_point()
-ggplot(incident_count_wide, aes(fyDeclared, incident_count_wide$`Severe Storm`)) + geom_point()
-ggplot(incident_count_wide, aes(fyDeclared, Hurricane)) + geom_point()
-incident_count_wide[!is.na(incident_count_wide$Fire),]
-
-
 # Simplified Data / Data of interest (most prevalent disasters):
 data_subset <- incident_count_wide[
   incident_count_wide$fyDeclared>=1970 & incident_count_wide$fyDeclared<=2021,
-  c("fyDeclared","Fire","Severe Storm","Hurricane","Flood","Drought","Snowstorm")
+  c("fyDeclared","Fire","Severe Storm","Hurricane","Flood") #,"Drought","Snowstorm"
   ]
 data_subset$Total = 
   rowSums(data_subset[,c(2:ncol(data_subset))], 
@@ -87,10 +80,56 @@ data_subset$sonicpi_semitones <- round(data_subset$sonicpi_numeric)
 write.table(matrix(data_subset$sonicpi_semitones,nrow=1), sep=",",
             row.names=FALSE, col.names=FALSE) # for "play_pattern_timed" in sonic pi
 
+# Now create a dB range to correspond with specific disaster instances
+# Groupings of 10 over [0,120] --> seq(0,120,10) --> 12 groups
+data_subset$Fire_dBgroup <- transform(data_subset, Fire_dBgroup = cut(Fire, c(seq(0,120,10)), labels = FALSE))$Fire_dBgroup
+data_subset$SevStorm_dBgroup <- transform(data_subset, SevStorm_dBgroup = cut(`Severe Storm`, c(seq(0,120,10)), labels = FALSE))$SevStorm_dBgroup
+data_subset$Hurricane_dBgroup <- transform(data_subset, Hurricane_dBgroup = cut(`Hurricane`, c(seq(0,120,10)), labels = FALSE))$Hurricane_dBgroup
+data_subset$Flood_dBgroup <- transform(data_subset, Flood_dBgroup = cut(Flood, c(seq(0,120,10)), labels = FALSE))$Flood_dBgroup
+# Replace NA with 0: (adds 13th group where 0 is quietest group)
+data_subset[c((ncol(data_subset)-3):ncol(data_subset))] <- 
+  data_subset[c((ncol(data_subset)-3):ncol(data_subset))] %>% replace(is.na(.), 0)
+
+# Now dB range? Let's try -12dB to 0 dB
+data_subset$Fire_dB <- mapvalues(x=data_subset$Fire_dBgroup, from=seq(0,12,1), to=seq(-12,0,1), warn_missing = TRUE)
+data_subset$SevStorm_dB <- mapvalues(x=data_subset$SevStorm_dBgroup, from=seq(0,12,1), to=seq(-12,0,1), warn_missing = TRUE)
+data_subset$Hurricane_dB <- mapvalues(x=data_subset$Hurricane_dBgroup, from=seq(0,12,1), to=seq(-12,0,1), warn_missing = TRUE)
+data_subset$Flood_dB <- mapvalues(x=data_subset$Flood_dBgroup, from=seq(0,12,1), to=seq(-12,0,1), warn_missing = TRUE)
+
+# temp viz ref for amplitude adjustments in logic:
+temp <- data_subset[c('fyDeclared','Fire_dB')]
+temp <- data_subset[c('fyDeclared','SevStorm_dB')]
+temp <- data_subset[c('fyDeclared','Hurricane_dB')]
+temp <- data_subset[c('fyDeclared','Flood_dB')]
+
+# Prep graph reference:
+subset_long1 <- pivot_longer(data_subset[1:5], !fyDeclared, names_to = "type", values_to = "count")
+subset_long2 <- pivot_longer(data_subset[c(1,6)], !fyDeclared, names_to = "type", values_to = "count")
+
+ggplot() + 
+  geom_line(data=subset_long2, aes(x=fyDeclared, y=count)) + geom_point() +
+  geom_point(data=subset_long1, aes(x=fyDeclared, y=count, color=type))
 
 
 
 
+# Exploration
+ggplot(incident_count_wide, aes(fyDeclared, Fire)) + geom_point()
+ggplot(incident_count_wide, aes(fyDeclared, Flood)) + geom_point()
+ggplot(incident_count_wide, aes(fyDeclared, incident_count_wide$`Severe Storm`)) + geom_point()
+ggplot(incident_count_wide, aes(fyDeclared, Hurricane)) + geom_point()
+incident_count_wide[!is.na(incident_count_wide$Fire),]
+ggplot(incident_count_wide, aes(fyDeclared, Hurricane)) + geom_point()
+
+data$state[data$fyDeclared==2011 & data$incidentType=="Fire"]
+# Mostly "TX" >> 2011 Texas wildfires
+# long table format:
+subset_long1 <- pivot_longer(data_subset[1:5], !fyDeclared, names_to = "type", values_to = "count")
+subset_long2 <- pivot_longer(data_subset[c(1,6)], !fyDeclared, names_to = "type", values_to = "count")
+
+ggplot(subset_long, aes(fyDeclared, count, col=type)) + geom_point()
+ggplot(subset_long, aes(fyDeclared, count, col=type)) + geom_point() +
+  geom_line(data = data_subset$Total)
 
 
 
