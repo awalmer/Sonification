@@ -107,8 +107,15 @@ subset_long1 <- pivot_longer(data_subset[1:5], !fyDeclared, names_to = "type", v
 subset_long2 <- pivot_longer(data_subset[c(1,6)], !fyDeclared, names_to = "type", values_to = "count")
 
 ggplot() + 
-  geom_line(data=subset_long2, aes(x=fyDeclared, y=count)) + geom_point() +
-  geom_point(data=subset_long1, aes(x=fyDeclared, y=count, color=type))
+  geom_line(data=subset_long2, aes(x=fyDeclared, y=count)) + 
+  geom_point(data=subset_long2, aes(x=fyDeclared, y=count)) +
+  geom_point(data=subset_long1, aes(x=fyDeclared, y=count, color=type)) +
+  scale_x_continuous(name = "Year", breaks=seq(1970,2021,1)) + 
+  theme(axis.text.x = element_text(size = 8, angle = -60)) +
+  scale_y_continuous(name = "Number of Disasters", breaks=seq(0,231,10)) + 
+  theme(axis.text.y = element_text(size = 8)) +
+  labs(color='Disaster')
+  
 
 
 
