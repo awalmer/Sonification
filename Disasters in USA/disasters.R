@@ -14,6 +14,7 @@ library(plyr)
 library(tidyr)   
 library(openxlsx)
 library(ggplot2)
+library(ggrepel)
 
 setwd("/Volumes/AuraByte2/Data Projects/Disasters in USA/")
 
@@ -109,6 +110,8 @@ subset_long2 <- pivot_longer(data_subset[c(1,6)], !fyDeclared, names_to = "type"
 ggplot() + 
   geom_line(data=subset_long2, aes(x=fyDeclared, y=count)) + 
   geom_point(data=subset_long2, aes(x=fyDeclared, y=count)) +
+  #geom_text(data=subset_long2, aes(x=fyDeclared, y=count, label = count, size = 2),
+            #nudge_x = 0.25, nudge_y = 2, size = 5) +
   geom_point(data=subset_long1, aes(x=fyDeclared, y=count, color=type)) +
   scale_x_continuous(name = "Year", breaks=seq(1970,2021,1)) + 
   theme(axis.text.x = element_text(size = 8, angle = -60)) +
@@ -116,6 +119,27 @@ ggplot() +
   theme(axis.text.y = element_text(size = 8)) +
   labs(color='Disaster')
   
+
+## I think amplitude changes in sonification need to be wider range as to be more noticeable.
+# Can try -20 to +4 dB --> wider range. Groups of 5 for disaster instances.
+data_subset$Fire_dBgroup2 <- transform(data_subset, Fire_dBgroup2 = cut(Fire, c(seq(0,120,5)), labels = FALSE))$Fire_dBgroup2
+data_subset$SevStorm_dBgroup2 <- transform(data_subset, SevStorm_dBgroup2 = cut(`Severe Storm`, c(seq(0,120,5)), labels = FALSE))$SevStorm_dBgroup2
+data_subset$Hurricane_dBgroup2 <- transform(data_subset, Hurricane_dBgroup2 = cut(`Hurricane`, c(seq(0,120,5)), labels = FALSE))$Hurricane_dBgroup2
+data_subset$Flood_dBgroup2 <- transform(data_subset, Flood_dBgroup2 = cut(Flood, c(seq(0,120,5)), labels = FALSE))$Flood_dBgroup2
+# Replace NAs with 0:
+data_subset[c((ncol(data_subset)-3):ncol(data_subset))] <- 
+  data_subset[c((ncol(data_subset)-3):ncol(data_subset))] %>% replace(is.na(.), 0)
+# New dB range:
+# 25 group values mapped to 25 dB values [-18,+6]
+data_subset$Fire_dB2 <- mapvalues(x=data_subset$Fire_dBgroup2, from=seq(0,24,1), to=seq(-18,6,1), warn_missing = TRUE)
+data_subset$SevStorm_dB2 <- mapvalues(x=data_subset$SevStorm_dBgroup2, from=seq(0,24,1), to=seq(-18,6,1), warn_missing = TRUE)
+data_subset$Hurricane_dB2 <- mapvalues(x=data_subset$Hurricane_dBgroup2, from=seq(0,24,1), to=seq(-18,6,1), warn_missing = TRUE)
+data_subset$Flood_dB2 <- mapvalues(x=data_subset$Flood_dBgroup2, from=seq(0,24,1), to=seq(-18,6,1), warn_missing = TRUE)
+# temp viz ref for amplitude adjustments in logic:
+temp <- data_subset[c('fyDeclared','Fire_dB2')]
+temp <- data_subset[c('fyDeclared','SevStorm_dB2')]
+temp <- data_subset[c('fyDeclared','Hurricane_dB2')]
+temp <- data_subset[c('fyDeclared','Flood_dB2')]
 
 
 
