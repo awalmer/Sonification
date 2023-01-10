@@ -141,7 +141,8 @@ temp <- data_subset[c('fyDeclared','SevStorm_dB2')]
 temp <- data_subset[c('fyDeclared','Hurricane_dB2')]
 temp <- data_subset[c('fyDeclared','Flood_dB2')]
 
-
+# Export table:
+openxlsx::write.xlsx(data_subset, 'datasets/data_subset.xlsx', sheetName = 'Disasters 1970-2021', rowNames=FALSE)
 
 
 # Exploration
