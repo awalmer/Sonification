@@ -7,6 +7,7 @@
 # Set Up #
 library(readxl)
 library(plyr)
+library(dplyr)
 
 setwd("/Volumes/AuraByte2/Data Projects/Degrees Conferred/")
 
@@ -37,6 +38,9 @@ colnames(field_B_raw) <- field_col_names
 colnames(field_B_percent) <- field_col_names_percent
 bachelors_by_field <- join(field_B_raw, field_B_percent, by = "year", 
                            type = "left", match = "all")
+bachelors_by_field[c(2:ncol(bachelors_by_field))] <- 
+  sapply(bachelors_by_field[c(2:ncol(bachelors_by_field))], as.numeric)
+
 
 field_M_raw <- degree_field[c(19:31),c(1:12)]
 field_M_percent <- degree_field[c(19:31),c(1,13:23)]
@@ -66,5 +70,115 @@ openxlsx::write.xlsx(gender_degree_merge, 'data export/Degree Type by Gender Ove
 openxlsx::write.xlsx(bachelors_by_field, 'data export/Bachelors by Field Over Time.xlsx', sheetName = 'Bachelors by Field of Study', rowNames=FALSE)
 openxlsx::write.xlsx(masters_by_field, 'data export/Masters by Field Over Time.xlsx', sheetName = 'Masters by Field of Study', rowNames=FALSE)
 openxlsx::write.xlsx(doctorates_by_field, 'data export/Doctorates by Field Over Time.xlsx', sheetName = 'Doctorates by Field of Study', rowNames=FALSE)
+
+
+## Data Exploration ##
+
+# Sonification Prep for Degrees Conferred
+
+# Associate percent of degrees with pitch, one field type at a time
+
+piano_note_levels <- c("C2","E2","G2","C3","E3","G3","C4","E4","G4","C5","E5","G5","C6")
+colMaxs(as.matrix(bachelors_by_field[sapply(bachelors_by_field, is.numeric)]))
+max_percent <- max(
+  bachelors_by_field[c((ncol(bachelors_by_field)-9):ncol(bachelors_by_field))] %>% 
+  summarise_if(is.numeric, max)
+) # 23.96178 ~= 24
+# Associate 0-24 range with piano note levels
+piano_note_factor <- c("C2"=0,"E2"=2,"G2"=4,"C3"=6,"E3"=8,"G3"=10,
+                       "C4"=12,"E4"=14,"G4"=16,"C5"=18,"E5"=20,"G5"=22,"C6"=24)
+bachelors_by_field$humanities_value_group <- round(bachelors_by_field$`percent  Humanities`/2)*2
+bachelors_by_field$humanities_pitch <- 
+  mapvalues(
+  x=bachelors_by_field$humanities_value_group, 
+  from=seq(0,24,2), 
+  to=names(piano_note_factor), 
+  warn_missing = TRUE
+  )
+# Create Functions:
+convert_percent_to_group <- function(percent_column) {
+  round(percent_column/2)*2
+}
+convert_group_to_pitch <- function(group_column, note_levels) {
+  mapvalues(
+    x=group_column, 
+    from=seq(0,24,2), 
+    to=names(note_levels), 
+    warn_missing = FALSE
+  )
+}
+# Apply:
+bachelors_by_field$psychology_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Psychology`)
+bachelors_by_field$psychology_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$psychology_value_group, piano_note_factor
+    )
+
+bachelors_by_field$socialscience_history_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Social Sciences and History`)
+bachelors_by_field$socialscience_history_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$socialscience_history_value_group, piano_note_factor
+  )
+
+bachelors_by_field$natscience_math_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Natural Sciences and Mathematics`)
+bachelors_by_field$natscience_math_history_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$natscience_math_value_group, piano_note_factor
+  )
+
+bachelors_by_field$compsci_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Computer Sciences`)
+bachelors_by_field$compsci_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$compsci_value_group, piano_note_factor
+  )
+
+bachelors_by_field$engineering_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Engineering`)
+bachelors_by_field$engineering_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$engineering_value_group, piano_note_factor
+  )
+
+bachelors_by_field$education_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Education`)
+bachelors_by_field$education_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$education_value_group, piano_note_factor
+  )
+
+bachelors_by_field$business_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Business`)
+bachelors_by_field$business_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$business_value_group, piano_note_factor
+  )
+
+bachelors_by_field$health_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Health Professions and Related Programs`)
+bachelors_by_field$health_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$health_value_group, piano_note_factor
+  )
+
+bachelors_by_field$other_value_group <- 
+  convert_percent_to_group(bachelors_by_field$`percent  Other Fields`)
+bachelors_by_field$other_pitch <- 
+  convert_group_to_pitch(
+    bachelors_by_field$other_value_group, piano_note_factor
+  )
+
+
+
+
+
+## after all separate scales played, narratively point out the fields 
+# with biggest changes over time and play those notes in comparison
+
+# Then play highest rates (as whole chord) e.g. all years of Education together
+# and all years of comp sci - consistently lowest rates?
 
 
