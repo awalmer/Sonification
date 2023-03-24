@@ -9,6 +9,7 @@ library(readxl)
 library(plyr)
 library(dplyr)
 library(resample)
+library(ggplot2)
 
 setwd("/Volumes/AuraByte2/Data Projects/Degrees Conferred/")
 
@@ -205,13 +206,51 @@ max(ol) # Business
 # Biggest Decrease: Education
 # Biggest Increase: Other
 
-
-
-
 ## after all separate scales played, narratively point out the fields 
 # with biggest changes over time and play those notes in comparison
 
 # Then play highest rates (as whole chord) e.g. all years of Education together
 # and all years of comp sci - consistently lowest rates?
 
+#--------------------
+
+## Continued work March 2023 ##
+
+## Table with 1970-71 to 2018-19 percentages:
+percent_compare_table <- data.frame(bachelors_by_field$year, 
+                                    bachelors_by_field %>% select(starts_with("percent"))
+)
+colnames(percent_compare_table) <- field_col_names_percent
+## Table with only 1971 versus 2019:
+pct <- percent_compare_table[c(1,nrow(percent_compare_table)),]
+
+## Line graph output:
+ggplot(data=percent_compare_table, aes(x=percent_compare_table$year,
+                                       y=percent_compare_table$`percent  Humanities`,
+                                       group=1)) +
+  geom_path()+
+  labs(title="1970-2019",x="Year", y = "Percent of Degrees Conferred")+
+  scale_y_continuous(limits = c(0,25)) 
+
+# Function:
+makelinegraph <- function(column, title) {
+  p <- ggplot(data=percent_compare_table, aes(x=`year`,
+                                              y=column,
+                                              group=1)) +
+    geom_path()+
+    labs(title=title, x="Year", y = "Percent of Degrees Conferred")+
+    scale_y_continuous(limits = c(0,24)) 
+  return(p)
+}
+
+colnames(percent_compare_table)
+makelinegraph(percent_compare_table$`percent  Humanities`, "Humanities")
+makelinegraph(percent_compare_table$`percent  Psychology`, "Psychology")
+makelinegraph(percent_compare_table$`percent  Social Sciences and History`, "Social Sciences and History")
+makelinegraph(percent_compare_table$`percent  Natural Sciences and Mathematics`, "Natural Sciences and Mathematics")
+makelinegraph(percent_compare_table$`percent  Computer Sciences`, "Computer Sciences")
+makelinegraph(percent_compare_table$`percent  Engineering`, "Engineering")
+makelinegraph(percent_compare_table$`percent  Education`, "Education")
+makelinegraph(percent_compare_table$`percent  Health Professions and Related Programs`, "Health Professions and Related Programs")
+makelinegraph(percent_compare_table$`percent  Other Fields`, "Other Fields")
 
