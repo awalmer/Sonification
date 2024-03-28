@@ -133,16 +133,16 @@ eclipse_path_us_sbst_clean <- eclipse_path_us_sbst_1dec[c("UTC","longitude","lat
                                                          "lon1","lat1","lon_int","lat_int")]
 
 # starting data frame:
-eclipse_path_us_sbst_clean$group <- "trajetory"
+eclipse_path_us_sbst_clean$group <- "trajectory"
 # now make separate data frame to rbind after
 # horizontal line, vertical line, extreme coordinates, and major cities
 
 # sides of triangle
-horizontal <- data.frame("lon_int"=unique(eclipse_path_us_sbst_clean$lon_int),
-                         "lat_int"=rep(29,34),
+horizontal <- data.frame("longitude"=unique(eclipse_path_us_sbst_clean$lon_int),
+                         "latitude"=rep(29,34),
                          "group"="horizontal line")
-vertical <- data.frame("lon_int"=rep(-68,18),
-                         "lat_int"=unique(eclipse_path_us_sbst_clean$lat_int),
+vertical <- data.frame("longitude"=rep(-68,18),
+                         "latitude"=unique(eclipse_path_us_sbst_clean$lat_int),
                          "group"="vertical line")
 # major cities
 # texas: san antonio [29.502, -98.537], austin [30.267, -97.743], dallas [32.777, -96.798]
@@ -163,11 +163,12 @@ major_cities <- data.frame(
   "group"="major city")
 
 extreme_coordinates <- data.frame(
-  "city_name"=c("Seattle, WA","San Diego, CA"),
-  # Seattle [47.647, -122.302], San Diego [32.714, -117.159]
-  "label"=c(),
-  "latitude"=c(),
-  "longitude"=c(),
+  "city_name"=c("Seattle, WA","San Diego, CA","Miami, FL","Portland, ME"),
+  # Seattle [47.647, -122.302], San Diego [32.714, -117.159], 
+  # Miami [25.813, -80.207], Portland, ME [43.718, -70.281]
+  "label"=c("upper left","lower left","lower right","upper right"),
+  "latitude"=c(47.647, 32.714, 25.813, 43.718),
+  "longitude"=c(-122.302, -117.159, -80.207, -70.281),
   "group"="extreme coordinate"
 )
 
@@ -175,8 +176,34 @@ start_end <- data.frame(
   "label"=c("Trajectory Start","Trajectory End"),
   "latitude"=c(28.849,46.278),
   "longitude"=c(-100.571,-67.849),
-  "group"=c("start","end")
+  "group"=c("start_end")
 )
 
+## bind all data frames together
 
+eclipse_path_us_sbst_clean2 <- bind_rows(
+  eclipse_path_us_sbst_clean,extreme_coordinates,horizontal,vertical,
+  major_cities,start_end
+  )
+
+# export
+write.csv(eclipse_path_us_sbst_clean2,"eclipse_path_elements.csv",
+          row.names=FALSE, fileEncoding="UTF-8", na="")
+
+# geojson stuff
+geojson_test <- paste0(
+  "[",
+  eclipse_path_us_sbst_clean2$longitude[(eclipse_path_us_sbst_clean2$group=="trajectory")],
+  ",",
+  eclipse_path_us_sbst_clean2$latitude[(eclipse_path_us_sbst_clean2$group=="trajectory")],
+  "]",
+  collapse=",")
+## useful tool to make geojson:
+# https://mapshaper.org/
+
+# csv no trajectory
+eclipse_path_us_sbst_other_elements <- eclipse_path_us_sbst_clean2[(eclipse_path_us_sbst_clean2$group!="trajectory"),]
+# export
+write.csv(eclipse_path_us_sbst_other_elements,"eclipse_path_elements_notrajectory.csv",
+          row.names=FALSE, fileEncoding="UTF-8", na="")
 
